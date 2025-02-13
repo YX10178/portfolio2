@@ -2,4 +2,90 @@
 title: "Portfolio 2"
 ---
 
-> The projects should be numbered consecutively (i.e., in the order in which you began them), and should include for each project a description of the goal, the product (computer program, hand graph, computer graph, etc.), the data, and some interpretation. Reports must be reproducible and of high quality in terms of writing, grammar, presentation, etc.
+
+###The AirPassengers dataset contains monthly airline passenger numbers from 1949 to 1960. In this portfolio, I will visualize the data to understand passenger trends over time. And answer some questions like how has the number of airline passengers changed over the years? Is there a seasonal pattern in passenger numbers? 
+
+# step 1
+```{r get the data}
+
+library(tidyverse)
+library(ggplot2)
+print(AirPassengers)
+? AirPassengers
+
+# Convert AirPassengers to a tibble
+air_passengers_df <- tibble(
+  year = rep(1949:1960, each = 12),  # Repeat years for each month
+  month = rep(month.abb, times = 12),  # Repeat month names
+  passengers = as.numeric(AirPassengers)  # Convert to numeric
+)
+
+# View dataset
+print(air_passengers_df)
+
+## in the data, year from 1949 to 1960, month from Jan to Dec
+## The classic Box & Jenkins airline data. Monthly totals of international airline passengers, 1949 to 1960.
+```
+
+# step 2
+```{r visualization, trend over the years }
+trend_years <- air_passengers_df %>%
+  group_by(year) %>%
+  summarise(avg_passengers = mean(passengers))
+
+ggplot(trend_years, aes(x = year, y = avg_passengers)) +
+  geom_line(color = "blue") +
+  labs(title = "Average Passengers (1949-1960)",
+       x = "Year",
+       y = "Average Passengers") +
+  theme_minimal()
+
+## The graph showing yearly trends clearly indicates that the average number of passengers increased year by year from 1949 to 1960.
+```
+
+# step 3
+```{r visualization, month pattern }
+month_pattern <- air_passengers_df %>%
+  group_by(month) %>%
+  summarise(avg_passengers = mean(passengers)) %>%
+  arrange(desc(avg_passengers))
+
+print(month_pattern)
+
+ggplot(month_pattern, aes(x = reorder(month, -avg_passengers), y = avg_passengers)) +
+  geom_bar(stat = "identity", fill = "pink") +
+  labs(title = "Average Passengers",
+       x = "Month",
+       y = "Average Passengers") +
+  theme_minimal()
+
+## from the bar chart, we can see that July and August have the highest number of passengers. January, February, and November have the lowest average passenger counts.
+```
+
+# step 4
+```{r visualization, seasonal pattern }
+air_passengers_df <- air_passengers_df %>%
+  mutate(season = case_when(
+    month %in% c("Mar", "Apr", "May") ~ "Spring",
+    month %in% c("Jun", "Jul", "Aug") ~ "Summer",
+    month %in% c("Sep", "Oct", "Nov") ~ "Fall",
+    month %in% c("Dec", "Jan", "Feb") ~ "Winter"
+  ))
+
+seasonal_trend <- air_passengers_df %>%
+  group_by(season) %>%
+  summarise(avg_passengers = mean(passengers)) %>%
+  arrange(desc(avg_passengers))
+
+print(seasonal_trend)
+
+ggplot(seasonal_trend, aes(x = season, y = avg_passengers)) +
+  geom_bar(stat = "identity", fill = "purple") +
+  labs(title = "Average Passengers",
+       x = "Season",
+       y = "Average Passengers") +
+  theme_minimal()
+
+## from this bar chart, we can see that The highest average number of airline passengers is during summer (June–August). Winter (December–February) has the lowest average number of passengers. 
+
+```
